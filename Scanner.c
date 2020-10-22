@@ -17,7 +17,7 @@ readsym , elsesym } token_type;
 typedef struct{
     token_type tokenVal;
     int numVal;
-    char name[10];
+    char name[12];      //max 11 length + null terminator
 }tokenStruct;
 
 //array for reserved words names
@@ -25,9 +25,9 @@ char* reservedWords[] = {"const", "var", "procedure", "call", "begin", "end", "i
 //array for internal representation of reserved words
 int  wsym[] =  {beginsym, callsym, constsym, dosym, elsesym, endsym, ifsym, oddsym, procsym, readsym, thensym, varsym, whilesym, writesym};
 //array for special symbols
-char specialSyms = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '<', '>', ';', ':'};
+char specialSyms[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '<', '>', ';', ':'};
 
-tokenStruct lexemeList[3000];
+tokenStruct lexemeList[3000];   //array of token structs
 int lexemeCounter = 0;
 
 int main(){
@@ -50,18 +50,7 @@ int main(){
         if(iscntrl(c) || isspace(c)){
             continue;
         }
-        //ignore comments
-        if(c == '/'){
-            c = fgetc(input);
-            if(c == '*'){
-                while(c != '*'){
-                    c = fgetc(input);
-                }
-                if(c == '*' && (c = fgetc(input)) == '/'){
-                    continue;
-                }
-            }
-        }
+        
         if(isalpha(c)){
             int length = 0;
             char word[12] = {0};    //12 chars is error identifier length
@@ -137,8 +126,7 @@ int main(){
                     break;
             }
             lexemeCounter++;
-        }
-        if(isdigit(c)){
+        }else if(isdigit(c)){
             int digit = c - '0';
             int digLength = 0;
             c = fgetc(input);
@@ -163,12 +151,117 @@ int main(){
                 lexemeList[lexemeCounter].numVal = digit;
                 lexemeList[lexemeCounter].tokenVal = numbersym;
             }
+        }else{
+            //if the character is a special symbol
+            switch(c){
+                case '+':
+                    lexemeList[lexemeCounter].tokenVal = plussym;
+                    lexemeCounter++;
+                    break;
+                case '-':
+                    lexemeList[lexemeCounter].tokenVal = minussym;
+                    lexemeCounter++;
+                    break;
+                case '*':
+                    lexemeList[lexemeCounter].tokenVal = multsym;
+                    lexemeCounter++;
+                    break;
+                case '/':
+                    c = fgetc(input);
+                    if(c == '*'){
+                        c = fgetc(input);
+                        int loop = 1;
+                        while(loop){
+                            if(c == '*'){
+                                c = fgetc(input);
+                                if(c == '/'){
+                                    loop = 0;
+                                }
+                            }else{
+                                c = fgetc(input);
+                            }
+                        }
+                    }else{      //just a slash. not a comment
+                        lexemeList[lexemeCounter].tokenVal = slashsym;
+                        lexemeCounter++;
+                    }
+                    break;
+                case '(':
+                    lexemeList[lexemeCounter].tokenVal = lparentsym;
+                    lexemeCounter++;
+                    break;
+                case ')':
+                    lexemeList[lexemeCounter].tokenVal = rparentsym;
+                    lexemeCounter++;
+                    break;
+                case '=':
+                    lexemeList[lexemeCounter].tokenVal = eqsym;
+                    lexemeCounter++;
+                    break;
+                case ',':
+                    lexemeList[lexemeCounter].tokenVal = commasym;
+                    lexemeCounter++;
+                    break;
+                case '.':
+                    lexemeList[lexemeCounter].tokenVal = periodsym;
+                    lexemeCounter++;
+                    break;
+                case '<':
+                    c = fgetc(input);
+                    if(c == '>'){
+                        lexemeList[lexemeCounter].tokenVal = neqsym;
+                    }else if(c == '='){
+                        lexemeList[lexemeCounter].tokenVal = leqsym;
+                    }else{
+                        lexemeList[lexemeCounter].tokenVal = lessym;
+                    }
+                    lexemeCounter++;
+                    break;
+                case '>':
+                    c = fgetc(input);
+                    if(c == '='){
+                        lexemeList[lexemeCounter].tokenVal = geqsym;
+                    }else{
+                        lexemeList[lexemeCounter].tokenVal = gtrsym;
+                    }
+                    lexemeCounter++;
+                    break;
+                case ';':
+                    lexemeList[lexemeCounter].tokenVal = semicolonsym;
+                    lexemeCounter++;
+                    break;
+                case ':':
+                    c = fgetc(input);
+                    if(c == '='){
+                        lexemeList[lexemeCounter].tokenVal = becomessym;
+                        lexemeCounter++;
+                    }else{
+                        printf("ERROR: Invalid symbols");
+                    }
+                    break;
+                default:
+                    printf("ERROR: Invalid symbols");
+                    break;
+            }
         }
-        
-
-
+        c = fgetc(input);
     }
     
+    printf("%d ", lexemeList[0].tokenVal);
+        if(lexemeList[0].tokenVal == 2){
+            printf("%s ", lexemeList[0].name);
+        }else if(lexemeList[0].tokenVal ==3){
+            printf("%d ", lexemeList[0].numVal);
+        }
+        int i = 1;
+        for(i; i < lexemeCounter; i++){
+            printf("%d ", lexemeList[i].tokenVal);
+            if(lexemeList[i].tokenVal == 2){
+                printf("%d ", lexemeList[i].numVal);
+            }else if(lexemeList[i].tokenVal == 3){
+                printf("%d ", lexemeList[i].numVal);
+            }
+        }
 
 
     
