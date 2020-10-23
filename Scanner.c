@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 //struct for token types
 typedef enum { 
@@ -25,9 +26,6 @@ typedef struct{
 //array for reserved words names
 char* reservedWords[] = {"const", "var", "procedure", "call", "begin", "end", "if", "then", "else", "while", "do", "read", "write", "odd"};
 
-// //array for internal representation of reserved words
-// int  wsym[] =  {beginsym, callsym, constsym, dosym, elsesym, endsym, ifsym, oddsym, procsym, readsym, thensym, varsym, whilesym, writesym};
-
 //array for special symbols
 char specialSyms[] = {'+', '-', '*', '/', '(', ')', '=', ',', '.', '<', '>', ';', ':'};
 
@@ -36,17 +34,27 @@ int lexcount = 0;
 
 int main(){
 
-    int peek = 0;
+    int peek = 0;       //used in the event of multiple characater tokens
+
     //get file name from user input
     char fileName[25];
     printf("What is your input file called? ");
     scanf("%s", fileName);
 
-    //read input
     FILE *input = fopen(fileName, "r");
+    int c = fgetc(input);       //stores each character in file
 
-    //stores each character in file
-    int c = fgetc(input);
+    //print the source code from the file
+    printf("SOURCE CODE:\n");
+    while(c != EOF){
+        printf("%c", c);
+        c = fgetc(input);
+    }
+    fclose(input);
+
+    //reset file
+    input = fopen(fileName, "r");
+    c = fgetc(input);
 
     while (c != EOF){
         //ignore tabs, white spaces, and newlines
@@ -87,6 +95,7 @@ int main(){
             for(i; i < 14; i++){
                 if(strcmp(word, reservedWords[i]) == 0){
                     reswordcheck = i;
+                    strcpy(lexemeList[lexcount].varname, word);
                 }
             }
             switch(reswordcheck){
@@ -186,14 +195,17 @@ int main(){
             switch(sym){
                 case 0:
                     lexemeList[lexcount].tokenVal = plussym;
+                    strcpy(lexemeList[lexcount].varname,"+");
                     lexcount++;
                     break;
                 case 1:
                     lexemeList[lexcount].tokenVal = minussym;
+                    strcpy(lexemeList[lexcount].varname,"-");
                     lexcount++;
                     break;
                 case 2:
                     lexemeList[lexcount].tokenVal = multsym;
+                    strcpy(lexemeList[lexcount].varname,"*");
                     lexcount++;
                     break;
                 case 3:
@@ -215,27 +227,33 @@ int main(){
                         }
                     }else{      //just a slash. not a comment
                         lexemeList[lexcount].tokenVal = slashsym;
+                        strcpy(lexemeList[lexcount].varname,"/");
                         lexcount++;
                     }
                     break;
                 case 4:
                     lexemeList[lexcount].tokenVal = lparentsym;
+                    strcpy(lexemeList[lexcount].varname,")");
                     lexcount++;
                     break;
                 case 5:
                     lexemeList[lexcount].tokenVal = rparentsym;
+                    strcpy(lexemeList[lexcount].varname,"(");
                     lexcount++;
                     break;
                 case 6:
                     lexemeList[lexcount].tokenVal = eqsym;
+                    strcpy(lexemeList[lexcount].varname,"=");
                     lexcount++;
                     break;
                 case 7:
                     lexemeList[lexcount].tokenVal = commasym;
+                    strcpy(lexemeList[lexcount].varname,",");
                     lexcount++;
                     break;
                 case 8:
                     lexemeList[lexcount].tokenVal = periodsym;
+                    strcpy(lexemeList[lexcount].varname,".");
                     lexcount++;
                     break;
                 case 9:
@@ -243,12 +261,15 @@ int main(){
                     peek = 1;
                     if(c == '>'){
                         lexemeList[lexcount].tokenVal = neqsym;
+                        strcpy(lexemeList[lexcount].varname,"<>");
                         peek = 0;
                     }else if(c == '='){
                         lexemeList[lexcount].tokenVal = leqsym;
+                        strcpy(lexemeList[lexcount].varname,"<=");
                         peek = 0;
                     }else{
                         lexemeList[lexcount].tokenVal = lessym;
+                        strcpy(lexemeList[lexcount].varname,"<");
                     }
                     lexcount++;
                     break;
@@ -257,20 +278,24 @@ int main(){
                     peek = 1;
                     if(c == '='){
                         lexemeList[lexcount].tokenVal = geqsym;
+                        strcpy(lexemeList[lexcount].varname,"=");
                         peek = 0;
                     }else{
                         lexemeList[lexcount].tokenVal = gtrsym;
+                        strcpy(lexemeList[lexcount].varname,">=");
                     }
                     lexcount++;
                     break;
                 case 11:
                     lexemeList[lexcount].tokenVal = semicolonsym;
+                    strcpy(lexemeList[lexcount].varname,";");
                     lexcount++;
                     break;
                 case 12:
                     c = fgetc(input);
                     if(c == '='){
                         lexemeList[lexcount].tokenVal = becomessym;
+                        strcpy(lexemeList[lexcount].varname,":=");
                         lexcount++;
                     }else{
                         printf("ERROR: Invalid symbols");
@@ -286,8 +311,17 @@ int main(){
         }
         
     }
+        //print out lexeme list and token type
         int i = 0;
+        printf("\nLEXEME TABLE:\nLEXEME\tTOKEN TYPE\n");
         for(i; i < lexcount; i++){
+            if(lexemeList[i].tokenVal == 3){
+                printf("%d\t%d\n", lexemeList[i].numVal, lexemeList[i].tokenVal);
+            }else{
+            printf("%s\t%d\n", lexemeList[i].varname, lexemeList[i].tokenVal);
+            }
+        }
+        for(i = 0; i < lexcount; i++){
             printf("%d ", lexemeList[i].tokenVal);
             if(lexemeList[i].tokenVal == 2){
                 printf("%s ", lexemeList[i].varname);
